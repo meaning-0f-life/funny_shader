@@ -9,6 +9,17 @@ import taichi.math as tim
 # ==================== Hash Functions ====================
 
 @ti.func
+def hash11(n: ti.f32) -> ti.f32:
+    """
+    1D -> 1D hash in [0,1).
+    Used for stable pseudo-random values.
+
+    Element type:
+      - f(x) function (random-like).
+    """
+    return tim.fract(tim.sin(n * 127.1 + 311.7) * 43758.5453123)
+
+@ti.func
 def hash21(p: tim.vec2) -> ti.f32:
     """
     2D hash function returning a pseudo-random float in [0, 1).
@@ -237,12 +248,6 @@ def sign(x: ti.f32) -> ti.f32:
 
 
 @ti.func
-def abs(x: ti.f32) -> ti.f32:
-    """Absolute value."""
-    return x if x >= 0.0 else -x
-
-
-@ti.func
 def length(v: tim.vec2) -> ti.f32:
     """Euclidean length of a 2D vector."""
     return tim.sqrt(v.x * v.x + v.y * v.y)
@@ -273,3 +278,27 @@ def normalize(v: tim.vec2) -> tim.vec2:
     """
     len_v = length(v)
     return v / len_v if len_v > 0.0 else tim.vec2(0.0)
+
+
+@ti.func
+def rot2(a: ti.f32) -> tim.mat2:
+    """
+    2D rotation matrix.
+
+    Element type:
+      - Linear space transform (rotation).
+    """
+    c = tim.cos(a)
+    s = tim.sin(a)
+    return tim.mat2([[c, -s], [s, c]])
+
+
+@ti.func
+def soft_mask(d: ti.f32, aa: ti.f32) -> ti.f32:
+    """
+    Convert signed distance to an anti-aliased mask (1 inside, 0 outside).
+
+    Element type:
+      - Smoothing function (smoothstep-based AA).
+    """
+    return tim.smoothstep(aa, -aa, d)

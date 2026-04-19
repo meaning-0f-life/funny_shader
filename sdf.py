@@ -172,6 +172,17 @@ def op_repeat(p: tim.vec2, c: tim.vec2) -> tim.vec2:
 
 
 @ti.func
+def op_repeat(p: tim.vec2, c: ti.f32) -> tim.vec2:
+    """
+    Domain repetition: repeats space in cells of size c.
+
+    Element type:
+      - Nonlinear space transform (fract-based repetition).
+    """
+    return tim.fract(p / c + 0.5) * c - 0.5 * c
+
+
+@ti.func
 def op_repeat_limited(p: tim.vec2, c: tim.vec2, limit: ti.i32) -> tim.vec2:
     """
     Domain repetition with limited number of repetitions.
@@ -288,3 +299,36 @@ def sd_vesica(p: tim.vec2, r: ti.f32, d: ti.f32) -> ti.f32:
         d = 1e-6
     r1 = r * (1.0 + d / (2.0 * r))
     return length(p - tim.vec2(clamp(p.x, -d/2, d/2), 0.0)) - r1
+
+
+# ==================== Space SDFs ====================
+
+@ti.func
+def sd_capsule(p: tim.vec2, a: tim.vec2, b: tim.vec2, r: ti.f32) -> ti.f32:
+    """
+    Capsule SDF: distance to segment [a,b] with radius r.
+
+    Element type:
+      - SDF.
+    """
+    pa = p - a
+    ba = b - a
+    h = tim.clamp(pa.dot(ba) / (ba.dot(ba) + 1e-6), 0.0, 1.0)
+    return tim.length(pa - ba * h) - r
+
+
+@ti.func
+def sd_star5(p: tim.vec2, r: ti.f32, inner: ti.f32) -> ti.f32:
+    """
+    A simple 5-point star-like SDF approximation using angular modulation.
+    Not physically perfect, but gives a pretty "big star sprite".
+
+    Element type:
+      - SDF.
+    """
+    ang = tim.atan2(p.y, p.x)
+    rad = tim.length(p)
+    # 5-point modulation: radius changes with angle
+    m = 0.5 + 0.5 * tim.cos(5.0 * ang)
+    target = tim.mix(inner, 1.0, m) * r
+    return rad - target

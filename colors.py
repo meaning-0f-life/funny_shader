@@ -389,3 +389,34 @@ def clamp_color(color: tim.vec3) -> tim.vec3:
     return tim.vec3(tim.clamp(color.r, 0.0, 1.0), 
                     tim.clamp(color.g, 0.0, 1.0), 
                     tim.clamp(color.b, 0.0, 1.0))
+
+
+# ==================== Space helpers ====================
+
+@ti.func
+def palette_space(u: ti.f32) -> tim.vec3:
+    """
+    A smooth cosmic palette (blue/purple/cyan with warm accents).
+
+    Element type:
+      - Color mixing.
+    """
+    # Use cosine palette style
+    a = tim.vec3(0.25, 0.22, 0.35)
+    b = tim.vec3(0.40, 0.35, 0.55)
+    c = tim.vec3(1.00, 1.00, 1.00)
+    d = tim.vec3(0.00, 0.15, 0.35)
+    return a + b * tim.cos(6.2831853 * (c * u + d))
+
+
+from core import hash11
+@ti.func
+def star_flicker(seed: ti.f32, t: ti.f32) -> ti.f32:
+    """
+    Star flicker function in [0..1], stable per-star and animated in time.
+
+    Element type:
+      - f(x,t).
+    """
+    f = 0.6 + 0.4 * tim.sin(t * (2.0 + 6.0 * hash11(seed)) + 6.28318 * hash11(seed + 3.1))
+    return tim.clamp(f, 0.0, 1.0)
